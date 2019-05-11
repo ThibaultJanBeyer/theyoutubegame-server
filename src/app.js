@@ -1,6 +1,6 @@
 const http = require("http").createServer();
 const io = require("socket.io")(http);
-const { Room } = require("./Room");
+const { Room } = require("./controllers/Room");
 
 new (class App {
   constructor() {
