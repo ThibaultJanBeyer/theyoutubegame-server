@@ -1,67 +1,46 @@
 const http = require("http").createServer();
 const io = require("socket.io")(http);
 const { Room } = require("./controllers/Room");
+const User = require("./model/User");
 
 new (class App {
   constructor() {
     this.rooms = {};
-    io.sockets.on("connection", socket => this.init(socket));
+    this.users = {};
+    this.io = io;
+    this.io.sockets.on("connection", socket => this.init(socket));
   }
 
   init(socket) {
-    console.log("new player");
-    socket.on("room/join", data => this.joinRoom(data, socket));
-    socket.on("room/leave", data => this.leaveRoom(data, socket));
+    console.log("new player", socket.id);
+    const user = new User({}, socket);
+    this.users[user.id] = user;
+
+    socket.on("user/data", data => (user.data = data));
+    socket.on("room/join", data => this.joinRoom(data.id, user));
+    socket.on("room/leave", data => this.leaveRoom(user));
+    socket.on("disconnect", () => this.disconnect(user));
   }
 
-  joinRoom(data, socket) {
-    if (!data.user || !data.id) return console.log("missing id or user");
-    if (this.rooms[data.id]) {
-      this.rooms[data.id].addMember(data.user, socket);
-    } else {
-      this.rooms[data.id] = new Room({
-        io,
-        socket,
-        id: data.id,
-        member: data.user
-      });
-    }
+  joinRoom(id, user) {
+    if (!id || !user) return console.log("missing id or user");
+    if (!this.rooms[id]) this.rooms[id] = new Room(id, this);
+    user.room = this.rooms[id];
   }
 
-  leaveRoom(data, socket) {
-    if (!data.roomId || !data.userId) return console.log("missing id or user");
-    const room = this.rooms[data.roomId];
-    if (!room) return console.log("room does not exist");
-    room.removeMember(data.userId);
+  leaveRoom(user) {
+    if(!user.room) return console.log("user was in no room");
+    const roomId = user.room.id;
+    user.room = false;
+    if (this.rooms[roomId].isEmpty) delete this.rooms[roomId];
   }
 
-  disconnect() {
-    console.log("player left");
+  disconnect(user) {
+    console.log("player left", user.id);
+    this.leaveRoom(user);
+    delete this.users[user.id];
   }
 })();
-
-// socket.on("initialize", function() {
-//   console.log("player joined");
-//   const id = socket.id;
-//   const newPlayer = new Player({ id });
-//   // Creates a new player object with a unique ID number.
-
-//   players[id] = newPlayer;
-//   // Adds the newly created player to the array.
-
-//   socket.emit("playerData", { id: id, players: players });
-//   // Sends the connecting client his unique ID, and data about the other players already connected.
-
-//   socket.broadcast.emit("playerJoined", newPlayer);
-//   // Sends everyone except the connecting player data about the new player.
-// });
-
-// socket.on("positionUpdate", function(data) {
-//   var player = players[data.id];
-
-//   player.position = data.position;
-//   player.rotation = data.rotation;
-// });
 
 // let time = new Date().getTime();
 // setInterval(function() {

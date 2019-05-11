@@ -1,4 +1,4 @@
-exports.default = [
+module.exports = [
   "Mentale Zuflucht",
   "Mind Warehouse",
   "10Minutes Cakes",

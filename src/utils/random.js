@@ -10,7 +10,9 @@ const date = () => {
   return date.toISOString();
 };
 
-const boolean = () => Math.random() > 0.5;
+const boolean = () => {
+  return Math.random() > 0.5;
+};
 
 const int = (min, max) => {
   min = Math.ceil(min);
@@ -21,7 +23,9 @@ const int = (min, max) => {
 // const possible =
 // 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 // return possible.charAt(Math.floor(Math.random() * possible.length));
-const query = () => words[int(0, words.length - 1)];
+const query = () => {
+  return words[int(0, words.length - 1)];
+};
 
 const color = () => {
   const letters = "0123456789ABCDEF";
@@ -53,12 +57,12 @@ const wordId = () => {
   return cleanWord + number;
 };
 
-exports.default = {
-  date,
+module.exports = {
   wordId,
-  uuid,
   query,
-  color,
   int,
-  boolean
+  uuid,
+  color,
+  boolean,
+  date
 };

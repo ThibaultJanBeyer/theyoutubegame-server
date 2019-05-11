@@ -1,9 +1,9 @@
 const { query, date, boolean, int } = require("../utils/random");
-// const fetch = require("node-fetch");
+const fetch = require("node-fetch");
 
 const key = "AIzaSyAQ28Tcxg061vZ2tsM2h7NMlPP2fVOQ3ug";
 
-class YouTubeHandler {
+module.exports = new (class YouTubeHandler {
   get randomOrder() {
     const possible = [
       "date",
@@ -81,6 +81,4 @@ class YouTubeHandler {
       .then(resp => resp.items[0].statistics)
       .catch(err => console.error(err));
   }
-}
-
-exports.default = new YouTubeHandler();
+})();

@@ -1,42 +1,49 @@
 const youTubeHandler = require("./YouTubeHandler");
 
 class Room {
-  constructor({ id, member, socket, io }) {
-    this.io = io;
+  constructor(id, app) {
+    this.app = app;
     this.id = id;
+
     this.points = 1000;
-    this.video = { id: "foo" };
+    this.video = {};
     this.members = {};
-    this.addMember(member, socket);
+
     this.sync();
+    this.startRound();
   }
 
   message(msg, data) {
-    this.io.to(this.id).emit(msg, data);
+    this.app.io.to(this.id).emit(msg, data);
   }
 
-  addMember(member, socket) {
-    console.log("add player", member);
-    socket.join(this.id);
-    if (this.members[member.id]) return member;
-    this.members[member.id] = Object.assign({}, member);
-    socket.on("disconnect", () => this.removeMember(member.id));
-    return member;
+  addMember(user) {
+    console.log("add player", user.id);
+    if (this.members[user.id]) return user;
+    return (this.members[user.id] = user);
   }
 
-  removeMember(memberId) {
-    delete this.members[memberId];
+  removeMember(user) {
+    delete this.members[user.id];
     return this.members;
   }
 
-  async startRound() {
-    const id = await youTubeHandler.roll();
-    const stats = await youTubeHandler.getVideoStats(id);
-    this.video = { id, stats };
-    this.videoStats = false;
+  get isEmpty() {
+    return Object.keys(this.members).length < 1;
   }
 
-  allVoted() {
+  async startRound() {
+    try {
+      const id = await youTubeHandler.roll();
+      const stats = await youTubeHandler.getVideoStats(id);
+      this.video = { id, stats };
+      this.videoStats = false;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  get allVoted() {
     return !Object.values(this.members).filter(member => !member.guess)[0];
   }
 
@@ -56,7 +63,7 @@ class Room {
 
   checkRound() {
     return false;
-    if (!this.allVoted()) return;
+    if (!this.allVoted) return;
     this.videoStats = this.video.stats;
     this.nearest = this.getNearestToViews();
     this.applyScore(this.nearest);
@@ -64,8 +71,11 @@ class Room {
 
   sync() {
     this.loop = setInterval(() => {
+      const members = Object.values(this.members).map(user =>
+        user.export(!!this.videoStats)
+      );
       this.message("room/sync", {
-        members: Object.values(this.members),
+        members,
         videoId: this.video.id,
         nearest: this.nearest,
         points: this.points,
