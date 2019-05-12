@@ -16,7 +16,10 @@ new (class App {
     const user = new User({}, socket);
     this.users[user.id] = user;
 
-    socket.on("user/data", data => (user.data = data));
+    socket.on("user/sync", data => {
+      console.log("update user", data);
+      user.data = data;
+    });
     socket.on("room/join", data => this.joinRoom(data.id, user));
     socket.on("room/leave", data => this.leaveRoom(user));
     socket.on("disconnect", () => this.disconnect(user));
@@ -29,10 +32,13 @@ new (class App {
   }
 
   leaveRoom(user) {
-    if(!user.room) return console.log("user was in no room");
+    if (!user.room) return console.log("user was in no room");
     const roomId = user.room.id;
     user.room = false;
-    if (this.rooms[roomId].isEmpty) delete this.rooms[roomId];
+    if (this.rooms[roomId].isEmpty) {
+      this.rooms[roomId].unMount();
+      delete this.rooms[roomId];
+    }
   }
 
   disconnect(user) {

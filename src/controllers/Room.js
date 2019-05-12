@@ -84,6 +84,10 @@ class Room {
       this.checkRound();
     }, 5000);
   }
+
+  unMount() {
+    clearInterval(this.loop);
+  }
 }
 
 exports.Room = Room;

@@ -1,24 +1,32 @@
 const { color: colorRnd, wordId } = require("../utils/random");
 
 module.exports = class User {
-  constructor(data, socket) {
+  constructor(
+    {
+      color = colorRnd(),
+      username = wordId(),
+      score = 0,
+      guess = false,
+      role = "user"
+    },
+    socket
+  ) {
     this.id = socket.id;
     this.socket = socket;
-    this.data = data;
-  }
 
-  set data({
-    color = colorRnd(),
-    username = wordId(),
-    score = 0,
-    guess = false,
-    role = "user"
-  }) {
+    this.score = score;
+    this.role = role;
     this.color = color;
     this.username = username;
-    this.score = score;
     this.guess = guess;
-    this.role = role;
+  }
+
+  set data({ color, username, guess, uuid }) {
+    console.log("setData", color, username, guess, uuid);
+    this.color = color;
+    this.username = username;
+    this.guess = guess;
+    this.uuid = uuid;
   }
 
   get room() {
@@ -43,6 +51,7 @@ module.exports = class User {
     const user = {
       color: this.color,
       id: this.id,
+      uuid: this.uuid,
       username: this.username,
       score: this.score,
       guess: withGuess ? this.guess : typeof this.guess === "number",
