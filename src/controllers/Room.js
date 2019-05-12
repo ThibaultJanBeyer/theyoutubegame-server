@@ -20,7 +20,7 @@ class Room {
   addMember(user) {
     console.log("add player", user.id);
     if (this.members[user.id]) return user;
-    return (this.members[user.id] = user);
+    this.members[user.id] = user;
   }
 
   removeMember(user) {
@@ -34,6 +34,7 @@ class Room {
 
   async startRound() {
     try {
+      Object.values(this.members).forEach(user => (user.guess = 0));
       const id = await youTubeHandler.roll();
       const stats = await youTubeHandler.getVideoStats(id);
       this.video = { id, stats };
@@ -54,19 +55,22 @@ class Room {
     );
   }
 
-  applyScore() {
-    return nearest.map((member, i) => {
-      member.guess = 0;
-      member.score += Math.floor(this.points / (i + 1));
+  applyScores(nearest) {
+    return nearest.map((user, i) => {
+      user.score += Math.floor(this.points / (i + 1));
+      user.nearestPlace = i;
     });
   }
 
   checkRound() {
-    return false;
-    if (!this.allVoted) return;
+    if (this.videoStats || !this.allVoted) return;
+    this.endRound();
+  }
+
+  endRound() {
+    console.log("endRound");
     this.videoStats = this.video.stats;
-    this.nearest = this.getNearestToViews();
-    this.applyScore(this.nearest);
+    this.applyScores(this.getNearestToViews());
   }
 
   sync() {
@@ -77,12 +81,11 @@ class Room {
       this.message("room/sync", {
         members,
         videoId: this.video.id,
-        nearest: this.nearest,
         points: this.points,
         videoStats: this.videoStats
       });
       this.checkRound();
-    }, 5000);
+    }, 2000);
   }
 
   unMount() {

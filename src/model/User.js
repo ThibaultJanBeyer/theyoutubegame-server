@@ -56,6 +56,7 @@ module.exports = class User {
       score: this.score,
       guess: withGuess ? this.guess : typeof this.guess === "number",
       role: this.role
+      nearestPlace: this.nearestPlace
     };
     return user;
   }
