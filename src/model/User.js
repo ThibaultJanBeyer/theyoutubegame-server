@@ -1,16 +1,22 @@
-const { color: colorRnd, wordId, uuid: uuidRnd } = require("../utils/random");
+const {
+  color: colorRnd,
+  username: usernameRnd,
+  uuid: uuidRnd
+} = require("../utils/random");
 
 module.exports = class User {
   constructor(
     {
       color = colorRnd(),
-      username = wordId(),
+      username = usernameRnd(),
       score = 0,
       guess = false,
       role = "user"
     },
-    socket
+    socket,
+    app
   ) {
+    this.app = app;
     this.id = socket.id;
     this.socket = socket;
 
@@ -21,8 +27,7 @@ module.exports = class User {
     this.guess = guess;
   }
 
-  set data({ color, username, guess, uuid = uuidRnd() }) {
-    console.log("setData", color, username, guess, uuid);
+  set data({ color = colorRnd(), username, guess, uuid = uuidRnd() }) {
     this.color = color;
     this.username = username;
     this.guess = guess;
@@ -47,6 +52,11 @@ module.exports = class User {
     this.socket.join(this._room.id);
   }
 
+  resetGuess() {
+    console.log("guess resetted", this.guess);
+    this.guess = false;
+  }
+
   export(withGuess) {
     const user = {
       color: this.color,
@@ -59,5 +69,9 @@ module.exports = class User {
       bonus: this.bonus
     };
     return user;
+  }
+
+  unMount() {
+    this.app.disconnect(this);
   }
 };

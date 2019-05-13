@@ -1,4 +1,7 @@
 const words = require("./words");
+const regionCodes = require("./regionCodes-iso3166-1-alpha-2");
+const languageCodes = require("./languageCodes-iso639-1");
+const usernames = require("./usernames");
 
 const date = () => {
   function randomDate(start, end) {
@@ -24,7 +27,11 @@ const int = (min, max) => {
 // 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 // return possible.charAt(Math.floor(Math.random() * possible.length));
 const query = () => {
-  return words[int(0, words.length - 1)];
+  return words[int(0, words.length)];
+};
+
+const username = () => {
+  return usernames[int(0, usernames.length)];
 };
 
 const color = () => {
@@ -57,6 +64,24 @@ const wordId = () => {
   return cleanWord + number;
 };
 
+const regionCode = () => {
+  if (Math.random() < 0.9) return "US";
+  else if (Math.random() < 0.2) return "DE";
+  else if (Math.random() < 0.2) return "FR";
+  else if (Math.random() < 0.2) return "ES";
+  else if (Math.random() < 0.2) return "RU";
+  else return regionCodes[parseInt(0, regionCodes.length)];
+};
+
+const languageCode = () => {
+  if (Math.random() < 0.95) return "en";
+  else if (Math.random() < 0.2) return "de";
+  else if (Math.random() < 0.2) return "fr";
+  else if (Math.random() < 0.2) return "es";
+  else if (Math.random() < 0.2) return "ru";
+  else return languageCodes[parseInt(0, languageCodes.length)];
+};
+
 module.exports = {
   wordId,
   query,
@@ -64,5 +89,8 @@ module.exports = {
   uuid,
   color,
   boolean,
-  date
+  date,
+  regionCode,
+  languageCode,
+  username
 };

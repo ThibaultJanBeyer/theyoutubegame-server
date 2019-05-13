@@ -1,10 +1,13 @@
 const http = require("http").createServer();
 const io = require("socket.io")(http);
-const { Room } = require("./controllers/Room");
+const Room = require("./controllers/Room");
+const YouTubeHandler = require("./controllers/YouTubeHandler");
 const User = require("./model/User");
+require("dotenv").config();
 
 new (class App {
   constructor() {
+    this.yt = new YouTubeHandler();
     this.rooms = {};
     this.users = {};
     this.io = io;
@@ -13,7 +16,7 @@ new (class App {
 
   init(socket) {
     console.log("new player", socket.id);
-    const user = new User({}, socket);
+    const user = new User({}, socket, this);
     this.users[user.id] = user;
 
     socket.on("user/sync", data => {
@@ -21,7 +24,7 @@ new (class App {
       user.data = data;
     });
     socket.on("room/join", data => this.joinRoom(data.id, user));
-    socket.on("room/leave", data => this.leaveRoom(user));
+    socket.on("room/leave", data => this.leaveRoom(data.id, user));
     socket.on("disconnect", () => this.disconnect(user));
   }
 
@@ -31,34 +34,23 @@ new (class App {
     user.room = this.rooms[id];
   }
 
-  leaveRoom(user) {
-    if (!user.room) return console.log("user was in no room");
+  leaveRoom(id, user) {
+    if (!id || !user.room) return console.log("user was in no room");
     const roomId = user.room.id;
     user.room = false;
-    if (!this.rooms[roomId]) return console.log("room does not exist");
-    if (this.rooms[roomId].isEmpty) {
-      this.rooms[roomId].unMount();
-      delete this.rooms[roomId];
+    if (!this.rooms[id]) return console.log("room does not exist");
+    if (this.rooms[id].isEmpty) {
+      this.rooms[id].unMount();
+      delete this.rooms[id];
     }
   }
 
   disconnect(user) {
     console.log("player left", user.id);
-    this.leaveRoom(user);
+    this.leaveRoom(user.room, user);
     delete this.users[user.id];
   }
 })();
-
-// let time = new Date().getTime();
-// setInterval(function() {
-//   // get past time
-//   let now = new Date().getTime(),
-//     dt = now - time;
-
-//   time = now;
-
-//   socket.broadcast.emit("updatePlayers", players);
-// });
 
 console.log("Server started. 8000");
 http.listen(8000);

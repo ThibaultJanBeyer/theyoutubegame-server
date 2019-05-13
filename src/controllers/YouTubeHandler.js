@@ -1,9 +1,19 @@
-const { query, date, boolean, int } = require("../utils/random");
+const {
+  query,
+  date,
+  boolean,
+  int,
+  regionCode,
+  languageCode
+} = require("../utils/random");
 const fetch = require("node-fetch");
 
-const key = "AIzaSyAQ28Tcxg061vZ2tsM2h7NMlPP2fVOQ3ug";
+module.exports = class YouTubeHandler {
+  constructor() {
+    this.key = process.env.YOUTUBE_KEY;
+    console.log(this.key);
+  }
 
-module.exports = new (class YouTubeHandler {
   get randomOrder() {
     const possible = [
       "date",
@@ -13,55 +23,53 @@ module.exports = new (class YouTubeHandler {
       "videoCount",
       "viewCount"
     ];
-    const order = possible[Math.floor(Math.random() * possible.length)];
-    console.info("o:", order);
-    return order;
+    return possible[Math.floor(Math.random() * possible.length)];
   }
 
   get randomDateOrder() {
-    const time = Math.random() > 0.5 ? "publishedAfter" : "publishedBefore";
-    console.info("do:", time);
-    return time;
-  }
-
-  get userRegion() {
-    return fetch("https://geoip-db.com/json")
-      .then(resp => resp.json())
-      .then(resp => resp["country_code"])
-      .catch(err => console.error(err));
+    return Math.random() > 0.5 ? "publishedAfter" : "publishedBefore";
   }
 
   /**
    * Rolls for a random video.
    * pass region code to prevent blocked content.
    * @param {string} location ISO 3166-1 alpha-2 country code e.g. "DE"
-   * @param {string} language ISO 639-1 two-letter language code
+   * @param {string} language ISO 639-1 two-letter language code e.g. "de"
    */
-  roll(location, language) {
-    console.log("l:", location, "la:", language);
-    return fetch(
-      `https://www.googleapis.com/youtube/v3/search
+  async roll(location, language) {
+    const reg = location || regionCode();
+    const lang = language || languageCode();
+    const request = `https://www.googleapis.com/youtube/v3/search
       ?q=${query()}
       &maxResults=50
       &${boolean ? `${this.randomDateOrder}=${date()}` : ""}
       &order=${this.randomOrder}
       &type=video
-      &part=snippet
-      ${location ? `&regionCode=${location}` : ""}
-      ${language ? `&relevanceLanguage=${language}` : ""}
-      &key=${key}
-      `.replace(/\s/g, "")
-    )
+      &videoSyndicated=true
+      &videoEmbeddable=true
+      &part=id
+      ${reg ? `&regionCode=${reg}` : ""}
+      ${lang ? `&relevanceLanguage=${lang}` : ""}
+      &key=${this.key}
+      `.replace(/\s/g, "");
+
+    console.log("roll youtube video", request);
+
+    const result = await fetch(request)
       .then(resp => resp.json())
       .then(resp => {
         if (resp.items) return resp.items[int(0, resp.items.length)];
         else throw resp;
       })
       .then(item => {
-        if (item.id && item.id.videoId) return item.id.videoId;
+        const videoId = item && item.id && item.id.videoId;
+        if (videoId) return videoId;
         else throw item;
       })
       .catch(err => console.error(err));
+
+    if (!result) return await this.roll();
+    else return result;
   }
 
   /**
@@ -74,11 +82,11 @@ module.exports = new (class YouTubeHandler {
       https://www.googleapis.com/youtube/v3/videos
       ?part=statistics
       &id=${videoID}
-      &key=${key}
+      &key=${this.key}
     `.replace(/\s/g, "")
     )
       .then(resp => resp.json())
       .then(resp => resp.items && resp.items[0] && resp.items[0].statistics)
       .catch(err => console.error(err));
   }
-})();
+};

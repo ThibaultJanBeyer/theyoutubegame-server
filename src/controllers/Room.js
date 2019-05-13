@@ -1,8 +1,10 @@
-const youTubeHandler = require("./YouTubeHandler");
+const { int } = require("../utils/random");
+const AI = require("../model/AI");
 
-const loopTimer = 1000;
+const loopTimer = 2500;
+const baseTimeout = 45 * 1000;
 
-class Room {
+module.exports = class Room {
   constructor(id, app) {
     this.app = app;
     this.id = id;
@@ -11,6 +13,9 @@ class Room {
     this.video = {};
     this.members = [];
     this.membersLookup = [];
+    this.fakeMemberLookup = [];
+
+    this.handleAI();
 
     this.sync();
     this.startRound();
@@ -35,31 +40,35 @@ class Room {
   }
 
   get isEmpty() {
-    return this.members.length < 1;
+    const realMembers = this.membersLookup.filter(
+      member => this.fakeMemberLookup.indexOf(member) < 0
+    );
+    console.log("empty", realMembers.length < 1);
+    return realMembers.length < 1;
   }
 
   async startRound() {
     try {
-      this.members.forEach(member => (member.guess = 0));
-      const id = await youTubeHandler.roll();
-      const stats = await youTubeHandler.getVideoStats(id);
+      this.members.forEach(user => user.resetGuess());
+      const id = await this.app.yt.roll(); // 100 quota cost
+      const stats = await this.app.yt.getVideoStats(id); // 2 quota cost
       this.video = { id, stats };
     } catch (err) {
       console.log(err);
     }
     this.videoStats = false;
 
-    this.timeout = 120000;
+    this.timeout = baseTimeout * 3;
     this.timeoutCallback = () => this.endRound();
   }
 
   get allVoted() {
-    return !this.members.filter(member => typeof member.guess !== number)[0];
+    return !this.members.filter(member => typeof member.guess !== "number")[0];
   }
 
   getNearestToViews() {
     const views = this.video.stats ? this.video.stats.viewCount * 1 : 0;
-    const guess = this.members.filter(user => typeof user.guess === number);
+    const guess = this.members.filter(user => typeof user.guess === "number");
     return guess.sort(
       (a, b) => Math.abs(views - a.guess) - Math.abs(views - b.guess)
     );
@@ -74,7 +83,6 @@ class Room {
   }
 
   checkRound() {
-    console.log(this.allVoted, this.members);
     if (!this.allVoted) return;
     if (typeof this.videoStats === "number") return;
 
@@ -85,15 +93,14 @@ class Room {
     if (this.videoStats) return;
 
     console.log("endRound");
-    this.videoStats = this.video.stats || 0;
+    this.videoStats = this.video.stats || {};
     this.applyScores(this.getNearestToViews());
 
-    this.timeout = 30000;
+    this.timeout = baseTimeout;
     this.timeoutCallback = () => this.startRound();
   }
 
   handleTimeouts() {
-    console.log(this.timeout);
     if (this.timeout > 0) return (this.timeout = this.timeout - loopTimer);
     if (this.timeout <= 0) {
       this.timeout = false;
@@ -106,9 +113,7 @@ class Room {
       this.handleTimeouts();
       this.checkRound();
 
-      const members = this.members.map(user =>
-        user.export(typeof this.videoStats === "number")
-      );
+      const members = this.members.map(user => user.export(this.videoStats));
 
       this.message("room/sync", {
         members,
@@ -123,6 +128,21 @@ class Room {
   unMount() {
     clearInterval(this.loop);
   }
-}
 
-exports.Room = Room;
+  addFakeMember() {
+    console.log("add fake");
+    const fakeMember = new AI(this.app);
+    this.fakeMemberLookup.push(fakeMember.id);
+    this.app.joinRoom("public", fakeMember);
+    return fakeMember;
+  }
+
+  handleAI() {
+    console.log(this.id);
+    if (this.id !== "public" || this.membersLookup.length > 4) return;
+    for (let i = 0; i < int(1, 12); i++) {
+      setTimeout(() => this.addFakeMember());
+    }
+    setTimeout(() => this.addFakeMember(), int(60 * 1000, 60 * 60 * 1000));
+  }
+};
