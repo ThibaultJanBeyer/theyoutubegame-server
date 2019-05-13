@@ -35,6 +35,7 @@ new (class App {
     if (!user.room) return console.log("user was in no room");
     const roomId = user.room.id;
     user.room = false;
+    if (!this.rooms[roomId]) return console.log("room does not exist");
     if (this.rooms[roomId].isEmpty) {
       this.rooms[roomId].unMount();
       delete this.rooms[roomId];

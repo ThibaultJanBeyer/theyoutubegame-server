@@ -78,7 +78,7 @@ module.exports = new (class YouTubeHandler {
     `.replace(/\s/g, "")
     )
       .then(resp => resp.json())
-      .then(resp => resp.items[0].statistics)
+      .then(resp => resp.items && resp.items[0] && resp.items[0].statistics)
       .catch(err => console.error(err));
   }
 })();

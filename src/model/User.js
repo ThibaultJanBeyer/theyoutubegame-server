@@ -1,4 +1,4 @@
-const { color: colorRnd, wordId } = require("../utils/random");
+const { color: colorRnd, wordId, uuid: uuidRnd } = require("../utils/random");
 
 module.exports = class User {
   constructor(
@@ -21,7 +21,7 @@ module.exports = class User {
     this.guess = guess;
   }
 
-  set data({ color, username, guess, uuid }) {
+  set data({ color, username, guess, uuid = uuidRnd() }) {
     console.log("setData", color, username, guess, uuid);
     this.color = color;
     this.username = username;
@@ -55,8 +55,8 @@ module.exports = class User {
       username: this.username,
       score: this.score,
       guess: withGuess ? this.guess : typeof this.guess === "number",
-      role: this.role
-      nearestPlace: this.nearestPlace
+      role: this.role,
+      bonus: this.bonus
     };
     return user;
   }
