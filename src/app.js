@@ -20,18 +20,16 @@ new (class App {
     const user = new User({}, socket, this);
     this.users[user.id] = user;
 
-    socket.on("user/sync", data => {
-      console.log("update user", data);
-      user.data = data;
-    });
-    socket.on("room/join", data => this.joinRoom(data.id, user));
+    socket.on("user/sync", data => (user.data = data));
+    socket.on("room/join", data => this.joinRoom(data.id, user, socket));
     socket.on("room/leave", data => this.leaveRoom(data.id, user));
     socket.on("disconnect", () => this.disconnect(user));
+    socket.on("room/chat/message", data => this.chatRoom(data.id, data));
   }
 
-  joinRoom(id, user) {
+  joinRoom(id, user, socket) {
     if (!id || !user) return console.log("missing id or user");
-    if (!this.rooms[id]) this.rooms[id] = new Room(id, this);
+    if (!this.rooms[id]) this.rooms[id] = new Room(id, this, socket);
     user.room = this.rooms[id];
   }
 
@@ -44,6 +42,12 @@ new (class App {
       this.rooms[id].unMount();
       delete this.rooms[id];
     }
+  }
+
+  chatRoom(id, data) {
+    const room = this.rooms[id];
+    if (!room) return console.log("room does not exist");
+    room.chatMessage(data);
   }
 
   disconnect(user) {

@@ -27,7 +27,7 @@ module.exports = class User {
     this.guess = guess;
   }
 
-  set data({ color = colorRnd(), username, guess, uuid = uuidRnd() }) {
+  set data({ color, username, guess, uuid = uuidRnd() }) {
     this.color = color;
     this.username = username;
     this.guess = guess;

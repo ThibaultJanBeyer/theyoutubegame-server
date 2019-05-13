@@ -9,10 +9,6 @@ const {
 const fetch = require("node-fetch");
 
 module.exports = class YouTubeHandler {
-  constructor() {
-    this.key = process.env.YOUTUBE_KEY;
-  }
-
   get randomOrder() {
     const possible = [
       "date",
@@ -35,7 +31,7 @@ module.exports = class YouTubeHandler {
    * @param {string} location ISO 3166-1 alpha-2 country code e.g. "DE"
    * @param {string} language ISO 639-1 two-letter language code e.g. "de"
    */
-  async roll(location, language) {
+  async roll(location, language, trial = 0) {
     const reg = location || regionCode();
     const lang = language || languageCode();
     const request = `https://www.googleapis.com/youtube/v3/search
@@ -49,7 +45,7 @@ module.exports = class YouTubeHandler {
       &part=id
       ${reg ? `&regionCode=${reg}` : ""}
       ${lang ? `&relevanceLanguage=${lang}` : ""}
-      &key=${this.key}
+      &key=${process.env[`YOUTUBE_KEY_${trial}`]}
       `.replace(/\s/g, "");
 
     console.log("roll youtube video", request);
@@ -67,8 +63,11 @@ module.exports = class YouTubeHandler {
       })
       .catch(err => console.error(err));
 
-    if (!result) return await this.roll();
-    else return result;
+    console.log(trial);
+    if (!result && trial < process.env.YOUTUBE_KEYS_MAX) {
+      const newTrial = trial + 1;
+      return await this.roll(location, language, newTrial);
+    } else return result;
   }
 
   /**
@@ -81,7 +80,7 @@ module.exports = class YouTubeHandler {
       https://www.googleapis.com/youtube/v3/videos
       ?part=statistics
       &id=${videoID}
-      &key=${this.key}
+      &key=${process.env[`YOUTUBE_KEY_${int(0, process.env.YOUTUBE_KEYS_MAX)}`]}
     `.replace(/\s/g, "")
     )
       .then(resp => resp.json())

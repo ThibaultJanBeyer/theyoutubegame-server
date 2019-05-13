@@ -5,7 +5,7 @@ const loopTimer = 2500;
 const baseTimeout = 60 * 1000;
 
 module.exports = class Room {
-  constructor(id, app) {
+  constructor(id, app, socket) {
     this.app = app;
     this.id = id;
 
@@ -14,11 +14,19 @@ module.exports = class Room {
     this.members = [];
     this.membersLookup = [];
     this.fakeMemberLookup = [];
+    this.chatMessages = [];
 
     this.handleAI();
 
     this.sync();
     this.startRound();
+  }
+
+  chatMessage(data) {
+    console.log("got a message", data);
+    const user = this.members.find(user => user.uuid === data.author.uuid);
+    if (!user) return console.log("user not found in room");
+    this.chatMessages.push({ author: user.export(), text: data.text });
   }
 
   message(msg, data) {
@@ -120,7 +128,8 @@ module.exports = class Room {
         videoId: this.video.id,
         points: this.points,
         videoStats: this.videoStats,
-        timeout: this.timeout
+        timeout: this.timeout,
+        chatMessages: this.chatMessages
       });
     }, loopTimer);
   }
