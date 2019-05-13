@@ -1,5 +1,5 @@
 const http = require("http").createServer();
-const io = require("socket.io")(http);
+const io = require("socket.io")(http, { origins: "*:*" });
 const Room = require("./controllers/Room");
 const YouTubeHandler = require("./controllers/YouTubeHandler");
 const User = require("./model/User");
@@ -11,6 +11,7 @@ new (class App {
     this.rooms = {};
     this.users = {};
     this.io = io;
+    this.io.origins("*:*");
     this.io.sockets.on("connection", socket => this.init(socket));
   }
 

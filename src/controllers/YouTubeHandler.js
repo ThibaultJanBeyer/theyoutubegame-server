@@ -11,7 +11,6 @@ const fetch = require("node-fetch");
 module.exports = class YouTubeHandler {
   constructor() {
     this.key = process.env.YOUTUBE_KEY;
-    console.log(this.key);
   }
 
   get randomOrder() {
