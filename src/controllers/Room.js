@@ -2,7 +2,7 @@ const { int } = require("../utils/random");
 const AI = require("../model/AI");
 
 const loopTimer = 2500;
-const baseTimeout = 45 * 1000;
+const baseTimeout = 60 * 1000;
 
 module.exports = class Room {
   constructor(id, app) {
@@ -58,7 +58,7 @@ module.exports = class Room {
     }
     this.videoStats = false;
 
-    this.timeout = baseTimeout * 3;
+    this.timeout = baseTimeout * 2;
     this.timeoutCallback = () => this.endRound();
   }
 
