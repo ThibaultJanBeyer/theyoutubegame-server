@@ -19,7 +19,6 @@ module.exports = class Room {
     this.handleAI();
 
     this.sync();
-    this.startRound();
   }
 
   chatMessage(data) {
@@ -75,7 +74,7 @@ module.exports = class Room {
   }
 
   getNearestToViews() {
-    const views = this.video.stats ? this.video.stats.viewCount * 1 : 0;
+    const views = this.video.stats ? +this.video.stats.viewCount : 0;
     const guess = this.members.filter(user => typeof user.guess === "number");
     return guess.sort(
       (a, b) => Math.abs(views - a.guess) - Math.abs(views - b.guess)
@@ -118,6 +117,13 @@ module.exports = class Room {
 
   sync() {
     this.loop = setInterval(() => {
+      if (this.isEmpty) return;
+
+      if (!this.running) {
+        this.running = true;
+        this.startRound();
+      }
+
       this.handleTimeouts();
       this.checkRound();
 

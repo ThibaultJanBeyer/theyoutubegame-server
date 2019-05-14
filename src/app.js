@@ -30,13 +30,12 @@ new (class App {
   joinRoom(id, user, socket) {
     if (!id || !user) return console.log("missing id or user");
     if (!this.rooms[id]) this.rooms[id] = new Room(id, this, socket);
-    user.room = this.rooms[id];
+    user.joinRoom(this.rooms[id]);
   }
 
   leaveRoom(id, user) {
     if (!id || !user.room) return console.log("user was in no room");
-    const roomId = user.room.id;
-    user.room = false;
+    user.leaveRoom();
     if (!this.rooms[id]) return console.log("room does not exist");
     if (this.rooms[id].isEmpty) {
       this.rooms[id].unMount();
@@ -52,7 +51,7 @@ new (class App {
 
   disconnect(user) {
     console.log("player left", user.id);
-    this.leaveRoom(user.room, user);
+    this.leaveRoom(user.room.id, user);
     delete this.users[user.id];
   }
 })();

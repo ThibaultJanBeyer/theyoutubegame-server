@@ -34,22 +34,17 @@ module.exports = class User {
     this.uuid = uuid;
   }
 
-  get room() {
-    return this._room;
+  joinRoom(room) {
+    this.room = room;
+    this.room.addMember(this);
+    this.socket.join(this.room.id);
   }
 
-  set room(room) {
-    // leave old
-    if (this._room) {
-      this.socket.leave(this._room.id);
-      this._room.removeMember(this);
-    }
-    this._room = room;
-
-    if (!room) return;
-    // join new
-    this._room.addMember(this);
-    this.socket.join(this._room.id);
+  leaveRoom() {
+    if (!this.room) return;
+    this.socket.leave(this.room.id);
+    this.room.removeMember(this);
+    this.room = false;
   }
 
   resetGuess() {
