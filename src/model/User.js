@@ -41,7 +41,7 @@ module.exports = class User {
   }
 
   leaveRoom() {
-    if (!this.room) return;
+    if (!this.room || !this.socket || !this.socket.leave) return;
     this.socket.leave(this.room.id);
     this.room.removeMember(this);
     this.room = false;
