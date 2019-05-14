@@ -51,7 +51,8 @@ new (class App {
 
   disconnect(user) {
     console.log("player left", user.id);
-    this.leaveRoom(user.room.id, user);
+    if (!user || !user.id) return console.log("user does not exist");
+    this.leaveRoom(user.room && user.room.id, user);
     delete this.users[user.id];
   }
 })();
