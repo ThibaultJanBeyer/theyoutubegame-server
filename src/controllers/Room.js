@@ -55,6 +55,8 @@ module.exports = class Room {
   }
 
   async startRound() {
+    this.ended = false;
+
     try {
       this.members.forEach(user => user.resetGuess());
       const id = await this.app.yt.roll(); // 100 quota cost
@@ -70,7 +72,11 @@ module.exports = class Room {
   }
 
   get allVoted() {
-    return !this.members.filter(member => typeof member.guess !== "number")[0];
+    return this.members.every(member => typeof member.guess === "number");
+  }
+
+  get noVote() {
+    return this.members.every(member => typeof member.guess !== "number");
   }
 
   getNearestToViews() {
@@ -90,16 +96,13 @@ module.exports = class Room {
   }
 
   checkRound() {
-    if (!this.allVoted) return;
-    if (typeof this.videoStats === "number") return;
-
-    this.endRound();
+    if (this.allVoted && !this.ended) return this.endRound();
+    if (this.noVote && this.ended) return this.startRound();
   }
 
   endRound() {
-    if (this.videoStats) return;
-
     console.log("endRound");
+    this.ended = true;
     this.videoStats = this.video.stats || {};
     this.applyScores(this.getNearestToViews());
 
