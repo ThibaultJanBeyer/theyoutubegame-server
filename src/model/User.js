@@ -48,8 +48,8 @@ module.exports = class User {
   }
 
   resetGuess() {
-    console.log("guess resetted", this.guess);
     this.guess = false;
+    this.bonus = false;
   }
 
   export(withGuess) {
