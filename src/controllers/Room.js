@@ -1,8 +1,8 @@
 const { int } = require("../utils/random");
 const AI = require("../model/AI");
 
-const loopTimer = 2800;
-const baseTimeout = 40 * 1000;
+const loopTimer = 1000;
+const baseTimeout = 50 * 1000;
 
 module.exports = class Room {
   constructor(id, app, socket) {
