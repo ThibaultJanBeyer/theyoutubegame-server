@@ -25,13 +25,15 @@ module.exports = class User {
     this.color = color;
     this.username = username;
     this.guess = guess;
+    this.skip = false;
   }
 
-  set data({ color, username, guess, uuid = uuidRnd() }) {
+  set data({ color, username, guess, uuid = uuidRnd(), skip }) {
     this.color = color;
     this.username = username;
     this.guess = guess;
     this.uuid = uuid;
+    this.skip = skip;
   }
 
   joinRoom(room) {
@@ -47,9 +49,10 @@ module.exports = class User {
     this.room = false;
   }
 
-  resetGuess() {
+  resetVotes() {
     this.guess = false;
     this.bonus = false;
+    this.skip = false;
   }
 
   export(withGuess) {

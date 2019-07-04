@@ -1,7 +1,7 @@
 const { int } = require("../utils/random");
 const AI = require("../model/AI");
 
-const loopTimer = 2500;
+const loopTimer = 2800;
 const baseTimeout = 40 * 1000;
 
 module.exports = class Room {
@@ -50,15 +50,14 @@ module.exports = class Room {
     const realMembers = this.membersLookup.filter(
       member => this.fakeMemberLookup.indexOf(member) < 0
     );
-    console.log("empty", realMembers.length < 1);
     return realMembers.length < 1;
   }
 
   async startRound() {
+    this.members.forEach(user => user.resetVotes());
     this.ended = false;
 
     try {
-      this.members.forEach(user => user.resetGuess());
       const id = await this.app.yt.roll(); // 100 quota cost
       const stats = await this.app.yt.getVideoStats(id); // 2 quota cost
       this.video = { id, stats };
@@ -67,7 +66,7 @@ module.exports = class Room {
     }
     this.videoStats = false;
 
-    this.timeout = baseTimeout * 2;
+    this.timeout = baseTimeout * 2.2;
     this.timeoutCallback = () => this.endRound();
   }
 
@@ -75,8 +74,8 @@ module.exports = class Room {
     return this.members.every(member => typeof member.guess === "number");
   }
 
-  get noVote() {
-    return this.members.every(member => typeof member.guess !== "number");
+  get allSkip() {
+    return this.members.every(member => member.skip);
   }
 
   getNearestToViews() {
@@ -97,7 +96,7 @@ module.exports = class Room {
 
   checkRound() {
     if (this.allVoted && !this.ended) return this.endRound();
-    if (this.noVote && this.ended) return this.startRound();
+    if (this.allSkip && this.ended) return this.startRound();
   }
 
   endRound() {

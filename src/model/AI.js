@@ -17,10 +17,11 @@ module.exports = class AI extends User {
       app
     );
     setTimeout(() => this.unMount(), int(0, 12 * 60 * 60 * 1000));
-    this.interval = setInterval(() => this.fakeGuess(), int(10000, 50000));
+    this.interval = setInterval(() => this.fakeGuess(), int(5000, 45000));
   }
 
   fakeGuess() {
+    this.skip = true;
     if (typeof this.guess !== "number") {
       const guessRange = guessSteps[int(0, guessSteps.length - 1)];
       this.guess = int(0, guessRange);
